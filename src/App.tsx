@@ -18,6 +18,8 @@ const LOCAL_STORAGE_KEY_ACCOUNTS = 'nexus_registered_accounts_2026';
 const LOCAL_STORAGE_KEY_GAMES = 'nexus_saved_games_2026';
 const LOCAL_STORAGE_KEY_COMMENTS = 'nexus_game_comments_2026';
 
+const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || '';
+
 const loadRegisteredAccounts = (): StoredAccount[] => {
   if (typeof window === 'undefined') return [];
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY_ACCOUNTS);
@@ -129,6 +131,25 @@ export default function App() {
     const savedGames = loadSavedGames();
     setGames(savedGames);
 
+    // If backend URL present, fetch canonical games from backend
+    if (typeof window !== 'undefined' && BACKEND_URL) {
+      (async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/games`);
+          if (res.ok) {
+            const remoteGames = await res.json();
+            if (Array.isArray(remoteGames) && remoteGames.length > 0) {
+              setGames(remoteGames);
+              saveGames(remoteGames);
+            }
+          }
+        } catch (e) {
+          // leave local games as fallback
+          console.warn('Could not fetch games from backend', e);
+        }
+      })();
+    }
+
     const savedComments = loadSavedComments();
     setComments(savedComments);
 
@@ -185,28 +206,55 @@ export default function App() {
     );
     const now = new Date().toISOString();
 
-    if (isSignUp) {
-      if (existingIndex !== -1) {
-        setAuthError('Nickname already taken. Please choose a different one.');
-        return;
-      }
-      const profile = createProfile(trimmedUsername);
-      const newAccount: StoredAccount = {
-        username: trimmedUsername,
-        password,
-        profile,
-        isLoggedIn: true,
-        registeredAt: now,
-        lastSeenAt: now,
-        isAdmin: isAdminUser(trimmedUsername),
-      };
-      const nextAccounts = [...accountList, newAccount];
-      saveRegisteredAccounts(nextAccounts);
-      setAccounts(nextAccounts);
-      setUserProfile(profile);
-      localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
-      setAuthError('');
-      setActiveTab('home');
+    // If backend configured, use remote auth endpoints
+    if (BACKEND_URL) {
+      (async () => {
+        try {
+          if (isSignUp) {
+            const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/auth/register`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: trimmedUsername, email: `${trimmedUsername}@nexus.local`, password }),
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              setAuthError(err.error || 'Failed to register');
+              return;
+            }
+            const data = await res.json();
+            const profile = data.user;
+            // store token if provided
+            if (data.token) localStorage.setItem('nexus_token', data.token);
+            setUserProfile(profile);
+            localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
+            setAuthError('');
+            setActiveTab('home');
+            return;
+          }
+
+          // login
+          const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: `${trimmedUsername}@nexus.local`, password }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            setAuthError(err.error || 'Failed to log in');
+            return;
+          }
+          const data = await res.json();
+          if (data.token) localStorage.setItem('nexus_token', data.token);
+          setUserProfile(data.user);
+          localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(data.user));
+          setAuthError('');
+          setActiveTab('home');
+          return;
+        } catch (e) {
+          console.warn('Auth request failed, falling back to local auth', e);
+          setAuthError('Auth service unreachable');
+        }
+      })();
       return;
     }
 
@@ -251,6 +299,32 @@ export default function App() {
   };
 
   const handleAddGame = (game: Game) => {
+    // If backend is configured, POST the new game so everyone sees it
+    if (BACKEND_URL) {
+      (async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/games`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(game),
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            setGames(updated);
+            saveGames(updated);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to save game to backend, falling back to local', e);
+        }
+        // fallback to local save
+        const nextGames = [game, ...games];
+        setGames(nextGames);
+        saveGames(nextGames);
+      })();
+      return;
+    }
+
     const nextGames = [game, ...games];
     setGames(nextGames);
     saveGames(nextGames);
