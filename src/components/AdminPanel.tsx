@@ -15,7 +15,7 @@ interface AdminPanelProps {
 
 const categoryOptions: Game['category'][] = ['Action', 'Racing', 'Adventure', 'Multiplayer', 'Puzzle'];
 
-export default function AdminPanel({ games, onAddGame, accounts, comments }: AdminPanelProps) {
+export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandLogo, currentBrandLogo, accounts, comments }: AdminPanelProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
