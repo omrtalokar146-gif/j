@@ -53,13 +53,13 @@ export default function ProfileView({ userProfile, games, onPlayGame, updateProf
     updateProfile({ favoriteGames: updated });
   };
 
-  // Convert recently played IDs to actual Game entities
-  const recentlyPlayedGames = userProfile.recentlyPlayed
+  // Convert recently played IDs to actual Game entities (defensive defaults)
+  const recentlyPlayedGames = (userProfile.recentlyPlayed || [])
     .map((id) => games.find((g) => g.id === id))
     .filter((g): g is Game => !!g);
 
-  // Convert favorite IDs to actual Game entities
-  const favoriteGames = userProfile.favoriteGames
+  // Convert favorite IDs to actual Game entities (defensive defaults)
+  const favoriteGames = (userProfile.favoriteGames || [])
     .map((id) => games.find((g) => g.id === id))
     .filter((g): g is Game => !!g);
 
@@ -257,8 +257,8 @@ export default function ProfileView({ userProfile, games, onPlayGame, updateProf
             Synchronized Achievements Badges
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {userProfile.achievements.map((badge) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(userProfile.achievements || []).map((badge) => (
               <div
                 key={badge.id}
                 className={`flex gap-4 p-4 rounded-3xl border transition-all ${
