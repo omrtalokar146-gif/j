@@ -8,9 +8,10 @@ interface NavbarProps {
   setActiveTab: (tab: 'home' | 'games' | 'auth' | 'profile' | 'admin') => void;
   userProfile: UserProfile | null; // Null if signed out
   onLogout: () => void;
+  brandLogo?: string;
 }
 
-export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout }: NavbarProps) {
+export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout, brandLogo }: NavbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const handleTabClick = (tab: 'home' | 'games' | 'auth' | 'profile') => {
@@ -36,8 +37,12 @@ export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout 
         onClick={() => handleTabClick('home')}
         className="flex items-center gap-2.5 cursor-pointer group"
       >
-        <div className="relative bg-gradient-to-tr from-purple-600 to-cyan-400 p-2 rounded-xl border border-white/10 group-hover:scale-105 transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.35)]">
-          <Gamepad2 size={22} className="text-white animate-pulse" />
+        <div className="relative bg-gradient-to-tr from-purple-600 to-cyan-400 p-2 rounded-xl border border-white/10 group-hover:scale-105 transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.35)] overflow-hidden">
+          {brandLogo ? (
+            <img src={brandLogo} alt="App logo" className="w-6 h-6 rounded-lg object-cover" />
+          ) : (
+            <Gamepad2 size={22} className="text-white animate-pulse" />
+          )}
         </div>
         <div className="flex flex-col">
           <span className="text-xl font-bold tracking-[0.25em] font-sans text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-cyan-300">
@@ -50,7 +55,7 @@ export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout 
       </div>
 
       {/* Navigation center tabs */}
-      <nav className="hidden md:flex items-center gap-1 bg-white/5 border border-white/5 rounded-2xl p-1">
+      <nav className="flex flex-wrap items-center gap-2 bg-white/5 border border-white/5 rounded-2xl p-2 overflow-x-auto max-w-full">
         {navItems.map((item) => (
           <button
             key={item.id}

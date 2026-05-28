@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Game, GameComment, StoredAccount } from '../types';
 import { audioSystem } from './AudioSystem';
-import { Plus, Users, MessageSquare, Upload, Link2, CheckCircle2 } from 'lucide-react';
+import { Plus, Users, MessageSquare, Upload, Link2, CheckCircle2, Trash2, Gamepad2 } from 'lucide-react';
 
 interface AdminPanelProps {
   games: Game[];
   onAddGame: (game: Game) => void;
+  onDeleteGame: (gameId: string) => void;
+  onSetBrandLogo: (file: File) => void;
+  currentBrandLogo: string;
   accounts: StoredAccount[];
   comments: GameComment[];
 }
@@ -20,6 +23,8 @@ export default function AdminPanel({ games, onAddGame, accounts, comments }: Adm
   const [category, setCategory] = useState<Game['category']>('Action');
   const [xpReward, setXpReward] = useState(150);
   const [formError, setFormError] = useState('');
+  const [logoPreview, setLogoPreview] = useState('');
+  const [logoFileName, setLogoFileName] = useState('');
 
   const signedInUsers = useMemo(() => accounts.filter((account) => account.isLoggedIn), [accounts]);
   const signedOutUsers = useMemo(() => accounts.filter((account) => !account.isLoggedIn), [accounts]);
@@ -31,6 +36,19 @@ export default function AdminPanel({ games, onAddGame, accounts, comments }: Adm
       return acc;
     }, {});
   }, [comments]);
+
+  const handleLogoFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setLogoPreview(dataUrl);
+      setLogoFileName(file.name);
+      onSetBrandLogo(file);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,6 +154,33 @@ export default function AdminPanel({ games, onAddGame, accounts, comments }: Adm
                 />
               </label>
             </div>
+
+            <label className="flex flex-col gap-2 text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">
+              App Logo from File Manager
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoFileChange}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white file:bg-[#1f2937] file:text-white file:px-3 file:py-2 file:rounded-2xl file:border-none focus:border-[#a855f7] focus:outline-none"
+              />
+              <span className="text-[10px] text-gray-400">Choose a local image to replace your app's brand logo in the header and footer.</span>
+            </label>
+
+            {(logoPreview || currentBrandLogo) && (
+              <div className="flex flex-row items-center gap-4 rounded-3xl border border-white/10 bg-white/5 p-4">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 bg-[#08070e] flex items-center justify-center">
+                  {logoPreview || currentBrandLogo ? (
+                    <img src={logoPreview || currentBrandLogo} alt="Current app logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Gamepad2 size={24} className="text-white/80" />
+                  )}
+                </div>
+                <div className="flex-1 text-sm text-gray-300">
+                  <p className="font-semibold text-white">App logo preview</p>
+                  <p className="text-[10px] text-gray-400">{logoFileName || 'Current app logo will show here after upload.'}</p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-2 text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">
@@ -257,13 +302,28 @@ export default function AdminPanel({ games, onAddGame, accounts, comments }: Adm
           <div className="space-y-4">
             {games.map((game) => (
               <div key={game.id} className="bg-white/5 border border-white/10 rounded-3xl p-4">
-                <div className="flex items-center gap-3">
-                  <img src={game.image} alt={game.title} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-white">{game.title}</p>
-                    <p className="text-[10px] text-gray-400">{game.category} • {game.players}</p>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={game.image} alt={game.title} className="w-16 h-16 rounded-2xl object-cover border border-white/10" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white truncate">{game.title}</p>
+                      <p className="text-[10px] text-gray-400">{game.category} • {game.players}</p>
+                    </div>
                   </div>
-                  <span className="text-xs text-cyan-300 uppercase tracking-[0.2em] font-bold">{commentsByGame[game.id]?.length || 0} comments</span>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <span className="text-xs text-cyan-300 uppercase tracking-[0.2em] font-bold">{commentsByGame[game.id]?.length || 0} comments</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        audioSystem.playClick();
+                        onDeleteGame(game.id);
+                      }}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[10px] uppercase tracking-widest text-red-200 hover:bg-red-500/15 transition-all"
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

@@ -17,6 +17,7 @@ const LOCAL_STORAGE_KEY_PROFILE = 'nexus_user_profile_2026';
 const LOCAL_STORAGE_KEY_ACCOUNTS = 'nexus_registered_accounts_2026';
 const LOCAL_STORAGE_KEY_GAMES = 'nexus_saved_games_2026';
 const LOCAL_STORAGE_KEY_COMMENTS = 'nexus_game_comments_2026';
+const LOCAL_STORAGE_KEY_BRAND_LOGO = 'nexus_brand_logo_2026';
 
 const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || '';
 
@@ -63,6 +64,15 @@ const loadSavedComments = (): GameComment[] => {
 
 const saveComments = (data: GameComment[]) => {
   localStorage.setItem(LOCAL_STORAGE_KEY_COMMENTS, JSON.stringify(data));
+};
+
+const loadBrandLogo = (): string => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(LOCAL_STORAGE_KEY_BRAND_LOGO) || '';
+};
+
+const saveBrandLogo = (logo: string) => {
+  localStorage.setItem(LOCAL_STORAGE_KEY_BRAND_LOGO, logo);
 };
 
 const isAdminUser = (username?: string): boolean => {
@@ -120,6 +130,7 @@ export default function App() {
   const [accounts, setAccounts] = useState<StoredAccount[]>([]);
   const [comments, setComments] = useState<GameComment[]>([]);
   const [activeGame, setActiveGame] = useState<Game | null>(null);
+  const [brandLogo, setBrandLogo] = useState<string>('');
   const [muteSound, setMuteSound] = useState(audioSystem.isMuted());
   const [authError, setAuthError] = useState('');
 
@@ -152,6 +163,11 @@ export default function App() {
 
     const savedComments = loadSavedComments();
     setComments(savedComments);
+
+    const savedLogo = loadBrandLogo();
+    if (savedLogo) {
+      setBrandLogo(savedLogo);
+    }
 
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
     if (saved) {
@@ -358,6 +374,22 @@ export default function App() {
     setActiveGame(game);
   };
 
+  const handleBrandLogoUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setBrandLogo(dataUrl);
+      saveBrandLogo(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteGame = (gameId: string) => {
+    const nextGames = games.filter((game) => game.id !== gameId);
+    setGames(nextGames);
+    saveGames(nextGames);
+  };
+
   const toggleGlobalMute = () => {
     const result = audioSystem.toggleMute();
     setMuteSound(result);
@@ -383,6 +415,7 @@ export default function App() {
         setActiveTab={setActiveTab} 
         userProfile={userProfile} 
         onLogout={handleLogout} 
+        brandLogo={brandLogo}
       />
 
       {/* Dynamic top banner for guest pilots */}
@@ -441,6 +474,9 @@ export default function App() {
           <AdminPanel 
             games={games} 
             onAddGame={handleAddGame} 
+            onDeleteGame={handleDeleteGame}
+            currentBrandLogo={brandLogo}
+            onSetBrandLogo={handleBrandLogoUpload}
             accounts={accounts} 
             comments={comments} 
           />
