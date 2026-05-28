@@ -384,6 +384,11 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
+  const handleResetBrandLogo = () => {
+    setBrandLogo('');
+    saveBrandLogo('');
+  };
+
   const handleDeleteGame = (gameId: string) => {
     const nextGames = games.filter((game) => game.id !== gameId);
     setGames(nextGames);
@@ -477,6 +482,7 @@ export default function App() {
             onDeleteGame={handleDeleteGame}
             currentBrandLogo={brandLogo}
             onSetBrandLogo={handleBrandLogoUpload}
+            onResetBrandLogo={handleResetBrandLogo}
             accounts={accounts} 
             comments={comments} 
           />
@@ -507,8 +513,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           
           <div className="flex items-center gap-3">
-            <div className="bg-white/5 border border-white/10 p-2 rounded-xl text-purple-400">
-              <Gamepad2 size={18} />
+            <div className="bg-white/5 border border-white/10 p-2 rounded-xl text-purple-400 overflow-hidden">
+              {brandLogo ? (
+                <img src={brandLogo} alt="App logo" className="w-8 h-8 rounded-lg object-cover" />
+              ) : (
+                <Gamepad2 size={18} />
+              )}
             </div>
             <div className="text-left">
               <span className="text-xs font-bold tracking-[0.2em] text-white uppercase block">

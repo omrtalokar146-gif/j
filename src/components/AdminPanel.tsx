@@ -8,6 +8,7 @@ interface AdminPanelProps {
   onAddGame: (game: Game) => void;
   onDeleteGame: (gameId: string) => void;
   onSetBrandLogo: (file: File) => void;
+  onResetBrandLogo: () => void;
   currentBrandLogo: string;
   accounts: StoredAccount[];
   comments: GameComment[];
@@ -15,7 +16,7 @@ interface AdminPanelProps {
 
 const categoryOptions: Game['category'][] = ['Action', 'Racing', 'Adventure', 'Multiplayer', 'Puzzle'];
 
-export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandLogo, currentBrandLogo, accounts, comments }: AdminPanelProps) {
+export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandLogo, onResetBrandLogo, currentBrandLogo, accounts, comments }: AdminPanelProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
@@ -167,18 +168,27 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
             </label>
 
             {(logoPreview || currentBrandLogo) && (
-              <div className="flex flex-row items-center gap-4 rounded-3xl border border-white/10 bg-white/5 p-4">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 bg-[#08070e] flex items-center justify-center">
-                  {logoPreview || currentBrandLogo ? (
-                    <img src={logoPreview || currentBrandLogo} alt="Current app logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Gamepad2 size={24} className="text-white/80" />
-                  )}
+              <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-row items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 bg-[#08070e] flex items-center justify-center">
+                    {logoPreview || currentBrandLogo ? (
+                      <img src={logoPreview || currentBrandLogo} alt="Current app logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Gamepad2 size={24} className="text-white/80" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-sm text-gray-300">
+                    <p className="font-semibold text-white">App logo preview</p>
+                    <p className="text-[10px] text-gray-400">{logoFileName || 'Current app logo will show here after upload.'}</p>
+                  </div>
                 </div>
-                <div className="flex-1 text-sm text-gray-300">
-                  <p className="font-semibold text-white">App logo preview</p>
-                  <p className="text-[10px] text-gray-400">{logoFileName || 'Current app logo will show here after upload.'}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={onResetBrandLogo}
+                  className="self-start rounded-2xl border border-white/10 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] font-bold text-red-200 hover:bg-red-500/15 transition-all"
+                >
+                  Reset to default logo
+                </button>
               </div>
             )}
 
