@@ -390,6 +390,29 @@ export default function App() {
   };
 
   const handleDeleteGame = (gameId: string) => {
+    if (BACKEND_URL) {
+      (async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/games/${gameId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            setGames(updated);
+            saveGames(updated);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to delete game backend, deleting locally instead', e);
+        }
+        const nextGames = games.filter((game) => game.id !== gameId);
+        setGames(nextGames);
+        saveGames(nextGames);
+      })();
+      return;
+    }
+
     const nextGames = games.filter((game) => game.id !== gameId);
     setGames(nextGames);
     saveGames(nextGames);

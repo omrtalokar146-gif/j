@@ -17,7 +17,7 @@ export const addGame = async (req, res) => {
       return res.status(400).json({ error: 'Invalid game data' });
     }
 
-    const newGame = await Game.create({
+    await Game.create({
       ...data,
       globalGame: true,
       createdBy: req.user?._id,
@@ -31,4 +31,20 @@ export const addGame = async (req, res) => {
   }
 };
 
-export default { getGames, addGame };
+export const deleteGame = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'Game id is required' });
+    }
+
+    await Game.deleteOne({ id, globalGame: true });
+    const games = await Game.find({ globalGame: true }).populate('createdBy', 'username');
+    res.json(games);
+  } catch (err) {
+    console.error('Delete game error:', err);
+    res.status(500).json({ error: 'Failed to delete game' });
+  }
+};
+
+export default { getGames, addGame, deleteGame };
