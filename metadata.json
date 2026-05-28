@@ -1,0 +1,6 @@
+{
+  "name": "Futuristic Gaming Platform",
+  "description": "A premium modern online gaming platform with game exploration, user profiles, and interactive neon aesthetics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
