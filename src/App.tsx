@@ -222,7 +222,11 @@ export default function App() {
               return;
             }
             const data = await res.json();
-            const profile = data.user;
+            const raw = data.user || {};
+            const profile = {
+              ...raw,
+              avatar: raw.avatar || raw.avatarUrl || 'https://res.cloudinary.com/demo/image/upload/v1/default-avatar.png',
+            };
             // store token if provided
             if (data.token) localStorage.setItem('nexus_token', data.token);
             setUserProfile(profile);
@@ -245,8 +249,13 @@ export default function App() {
           }
           const data = await res.json();
           if (data.token) localStorage.setItem('nexus_token', data.token);
-          setUserProfile(data.user);
-          localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(data.user));
+          const raw = data.user || {};
+          const profile = {
+            ...raw,
+            avatar: raw.avatar || raw.avatarUrl || 'https://res.cloudinary.com/demo/image/upload/v1/default-avatar.png',
+          };
+          setUserProfile(profile);
+          localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
           setAuthError('');
           setActiveTab('home');
           return;
