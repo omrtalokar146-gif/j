@@ -2,6 +2,11 @@ import cloudinary from '../config/cloudinary.js';
 import User from '../models/User.js';
 
 const uploadToCloudinary = (fileBuffer) => {
+  // fail fast if Cloudinary not configured
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    return Promise.reject(new Error('Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in your environment.'));
+  }
+
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: 'nexus/avatars', resource_type: 'image' },
