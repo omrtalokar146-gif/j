@@ -1207,10 +1207,10 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
   }, [isPlaying, dimensions]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex sm:items-center items-start justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
       <div 
         ref={containerRef}
-        className="relative w-full max-w-5xl bg-[#0b0a13]/90 border border-[#a855f7]/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(168,85,247,0.25)] p-3 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-4 md:gap-6 animate-in fade-in zoom-in duration-300 my-auto"
+        className="relative w-full max-w-5xl bg-[#0b0a13]/90 border border-[#a855f7]/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(168,85,247,0.25)] p-3 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-4 md:gap-6 animate-in fade-in zoom-in duration-300 max-h-[calc(100vh-48px)]"
       >
         {/* Absolute header options */}
         <button 
