@@ -16,6 +16,7 @@ import { StoredAccount, GameComment } from './types';
 const LOCAL_STORAGE_KEY_PROFILE = 'nexus_user_profile_2026';
 const LOCAL_STORAGE_KEY_ACCOUNTS = 'nexus_registered_accounts_2026';
 const LOCAL_STORAGE_KEY_GAMES = 'nexus_saved_games_2026';
+const LOCAL_STORAGE_KEY_DELETED_GAMES = 'nexus_deleted_game_ids_2026';
 const LOCAL_STORAGE_KEY_COMMENTS = 'nexus_game_comments_2026';
 const LOCAL_STORAGE_KEY_BRAND_LOGO = 'nexus_brand_logo_2026';
 
@@ -64,6 +65,21 @@ const loadSavedComments = (): GameComment[] => {
 
 const saveComments = (data: GameComment[]) => {
   localStorage.setItem(LOCAL_STORAGE_KEY_COMMENTS, JSON.stringify(data));
+};
+
+const loadDeletedGameIds = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY_DELETED_GAMES);
+  if (!saved) return [];
+  try {
+    return JSON.parse(saved) as string[];
+  } catch {
+    return [];
+  }
+};
+
+const saveDeletedGameIds = (ids: string[]) => {
+  localStorage.setItem(LOCAL_STORAGE_KEY_DELETED_GAMES, JSON.stringify(ids));
 };
 
 const loadBrandLogo = (): string => {
@@ -130,6 +146,7 @@ export default function App() {
   const [accounts, setAccounts] = useState<StoredAccount[]>([]);
   const [comments, setComments] = useState<GameComment[]>([]);
   const [activeGame, setActiveGame] = useState<Game | null>(null);
+  const [deletedGameIds, setDeletedGameIds] = useState<string[]>([]);
   const [brandLogo, setBrandLogo] = useState<string>('');
   const [muteSound, setMuteSound] = useState(audioSystem.isMuted());
   const [authError, setAuthError] = useState('');
@@ -139,8 +156,12 @@ export default function App() {
     const savedAccounts = loadRegisteredAccounts();
     setAccounts(savedAccounts);
 
+    const savedDeletedIds = loadDeletedGameIds();
+    setDeletedGameIds(savedDeletedIds);
+
     const savedGames = loadSavedGames();
-    setGames(savedGames);
+    const filteredSavedGames = savedGames.filter((game) => !savedDeletedIds.includes(game.id));
+    setGames(filteredSavedGames);
 
     // If backend URL present, fetch canonical games from backend
     if (typeof window !== 'undefined' && BACKEND_URL) {
@@ -150,8 +171,13 @@ export default function App() {
           if (res.ok) {
             const remoteGames = await res.json();
             if (Array.isArray(remoteGames) && remoteGames.length > 0) {
-              setGames(remoteGames);
-              saveGames(remoteGames);
+              const remoteFiltered = remoteGames.filter((game: Game) => !savedDeletedIds.includes(game.id));
+              const mergedGames = [
+                ...filteredSavedGames,
+                ...remoteFiltered.filter((remote: Game) => !filteredSavedGames.some((local) => local.id === remote.id)),
+              ];
+              setGames(mergedGames);
+              saveGames(mergedGames);
             }
           }
         } catch (e) {
@@ -390,32 +416,35 @@ export default function App() {
   };
 
   const handleDeleteGame = (gameId: string) => {
-    if (BACKEND_URL) {
-      (async () => {
-        try {
-          const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/games/${gameId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          if (res.ok) {
-            const updated = await res.json();
-            setGames(updated);
-            saveGames(updated);
-            return;
-          }
-        } catch (e) {
-          console.warn('Failed to delete game backend, deleting locally instead', e);
-        }
-        const nextGames = games.filter((game) => game.id !== gameId);
-        setGames(nextGames);
-        saveGames(nextGames);
-      })();
+    const nextGames = games.filter((game) => game.id !== gameId);
+    const nextDeletedIds = Array.from(new Set([...deletedGameIds, gameId]));
+
+    setGames(nextGames);
+    setDeletedGameIds(nextDeletedIds);
+    saveGames(nextGames);
+    saveDeletedGameIds(nextDeletedIds);
+
+    if (!BACKEND_URL) {
       return;
     }
 
-    const nextGames = games.filter((game) => game.id !== gameId);
-    setGames(nextGames);
-    saveGames(nextGames);
+    (async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL.replace(/\/$/, '')}/api/games/${gameId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          const filteredUpdated = updated.filter((game: Game) => !nextDeletedIds.includes(game.id));
+          setGames(filteredUpdated);
+          saveGames(filteredUpdated);
+          return;
+        }
+      } catch (e) {
+        console.warn('Failed to delete game backend, deleting locally instead', e);
+      }
+    })();
   };
 
   const toggleGlobalMute = () => {
