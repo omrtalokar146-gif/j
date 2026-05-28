@@ -26,8 +26,8 @@ export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout 
     ...(isAdmin ? [{ id: 'admin', label: 'Admin Panel' }] : []),
   ] as const;
 
-  // Unlocked achievements notifications count
-  const unlockedCount = userProfile?.achievements.filter(a => a.unlocked).length || 0;
+  // Unlocked achievements notifications count (defensive when achievements missing)
+  const unlockedCount = (userProfile?.achievements || []).filter(a => a.unlocked).length || 0;
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#050409]/80 backdrop-blur-md border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center transition-all duration-300">
@@ -119,9 +119,9 @@ export default function Navbar({ activeTab, setActiveTab, userProfile, onLogout 
 
                   <div className="flex flex-col gap-2.5 max-h-60 overflow-y-auto">
                     {unlockedCount > 0 ? (
-                      userProfile.achievements
-                        .filter(a => a.unlocked)
-                        .map(a => (
+                        (userProfile.achievements || [])
+                          .filter(a => a.unlocked)
+                          .map(a => (
                           <div key={a.id} className="flex gap-3 bg-white/5 rounded-xl p-2 border border-white/5 hover:bg-white/10 duration-200">
                             <div className="text-yellow-400 text-xs mt-0.5"><Star size={14} fill="currentColor" /></div>
                             <div>

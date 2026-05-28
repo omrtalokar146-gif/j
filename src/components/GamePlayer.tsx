@@ -130,12 +130,14 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
       leveledUp = true;
     }
 
-    // Save platforms profile details
-    const recent = [...userProfile.recentlyPlayed.filter(id => id !== game.id)];
-    recent.unshift(game.id);
+    // Save platforms profile details (defensive defaults)
+    const recent = [
+      game.id,
+      ...((userProfile.recentlyPlayed || []).filter(id => id !== game.id)),
+    ].slice(0, 5);
 
-    // Achievements unlocking logic
-    const currentAchievements = [...userProfile.achievements];
+    // Achievements unlocking logic (ensure achievements array exists)
+    const currentAchievements = [...(userProfile.achievements || [])];
     let achievementUnlocked = false;
 
     // First step unlocked
