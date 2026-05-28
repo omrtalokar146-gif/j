@@ -71,7 +71,7 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
 
   const toggleFullscreen = () => {
     if (!gameScreenRef.current) return;
-    
+
     if (!document.fullscreenElement) {
       gameScreenRef.current.requestFullscreen()
         .then(() => setIsFullscreen(true))
@@ -82,6 +82,15 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
         .catch((err) => console.error(`Error attempting to disable fullscreen: ${err.message}`));
     }
   };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const handleStartGame = () => {
     audioSystem.playPowerUp();
@@ -1206,11 +1215,14 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
     };
   }, [isPlaying, dimensions]);
 
+  const screenWidth = isFullscreen ? window.innerWidth : Math.min(dimensions.width, window.innerWidth - 32);
+  const screenHeight = isFullscreen ? window.innerHeight : Math.min(dimensions.height, window.innerHeight - 200);
+
   return (
     <div className="fixed inset-0 z-50 flex sm:items-center items-start justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
       <div 
         ref={containerRef}
-        className="relative w-full max-w-5xl bg-[#0b0a13]/90 border border-[#a855f7]/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(168,85,247,0.25)] p-3 sm:p-6 md:p-8 flex flex-col lg:flex-row gap-4 md:gap-6 animate-in fade-in zoom-in duration-300 max-h-[calc(100vh-48px)]"
+        className="relative w-full max-w-5xl rounded-2xl sm:rounded-3xl p-3 sm:p-6 md:p-8 bg-[#0b0a13]/90 border border-[#a855f7]/40 overflow-hidden shadow-[0_0_50px_rgba(168,85,247,0.25)] flex flex-col lg:flex-row gap-4 md:gap-6 animate-in fade-in zoom-in duration-300 max-h-[calc(100vh-48px)]"
       >
         {/* Absolute header options */}
         <button 
@@ -1401,7 +1413,7 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
             <div className="relative w-full flex flex-col justify-center items-center gap-3 sm:gap-4">
               <div 
                 ref={gameScreenRef}
-                className="relative w-full flex justify-center"
+                className={`relative ${isFullscreen ? 'w-screen h-screen' : 'w-full'} flex justify-center`}
               >
                 <div className="absolute top-2 sm:top-4 left-2 sm:left-4 right-2 sm:right-4 flex justify-between items-center pointer-events-none z-20 font-mono gap-2">
                   <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs text-white whitespace-nowrap">
@@ -1416,19 +1428,19 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
                   <iframe
                     title={game.title}
                     src={game.iframeUrl}
-                    width={Math.min(dimensions.width, window.innerWidth - 32)}
-                    height={Math.min(dimensions.height, window.innerHeight - 200)}
-                    className="bg-[#05040a] rounded-lg sm:rounded-2xl block shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5"
+                    width={screenWidth}
+                    height={screenHeight}
+                    className={`bg-[#05040a] rounded-lg sm:rounded-2xl block shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5 ${isFullscreen ? 'w-full h-full' : ''}`}
                     frameBorder="0"
                     allowFullScreen
                   />
                 ) : (
                   <canvas
                     ref={canvasRef}
-                    width={Math.min(dimensions.width, window.innerWidth - 32)}
-                    height={Math.min(dimensions.height, window.innerHeight - 200)}
-                    className="bg-[#05040a] rounded-lg sm:rounded-2xl block shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5"
-                    style={{ cursor: game.id === 'cyber-arena' || game.id === 'quantum-puzzle' ? 'none' : 'default', maxWidth: '100%', height: 'auto' }}
+                    width={screenWidth}
+                    height={screenHeight}
+                    className={`bg-[#05040a] rounded-lg sm:rounded-2xl block shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5 ${isFullscreen ? 'w-full h-full' : ''}`}
+                    style={{ cursor: game.id === 'cyber-arena' || game.id === 'quantum-puzzle' ? 'none' : 'default', maxWidth: '100%', height: isFullscreen ? '100%' : 'auto' }}
                   />
                 )}
               </div>
