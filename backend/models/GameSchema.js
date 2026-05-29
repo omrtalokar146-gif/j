@@ -13,6 +13,7 @@ const gameSchema = new mongoose.Schema(
     color: { type: String, default: 'cyan' },
     xpReward: { type: Number, default: 100 },
     iframeUrl: { type: String },
+    externalUrl: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     globalGame: { type: Boolean, default: true }, // if true, visible to all users
   },

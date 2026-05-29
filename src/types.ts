@@ -12,6 +12,7 @@ export interface Game {
   color: string; // Neon accent color (cyan, purple, pink, emerald, orange)
   xpReward: number;
   iframeUrl?: string;
+  externalUrl?: string;
 }
 
 export interface GameComment {

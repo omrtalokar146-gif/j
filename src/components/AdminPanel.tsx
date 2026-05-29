@@ -21,6 +21,7 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
   const [iframeUrl, setIframeUrl] = useState('');
+  const [externalUrl, setExternalUrl] = useState('');
   const [category, setCategory] = useState<Game['category']>('Action');
   const [xpReward, setXpReward] = useState(150);
   const [formError, setFormError] = useState('');
@@ -54,8 +55,8 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     audioSystem.playClick();
-    if (!title.trim() || !description.trim() || !image.trim() || !iframeUrl.trim()) {
-      setFormError('All fields are required to publish a new game.');
+    if (!title.trim() || !description.trim() || !image.trim() || (!iframeUrl.trim() && !externalUrl.trim())) {
+      setFormError('All fields are required, and either an internal game URL or external redirect link must be provided.');
       return;
     }
 
@@ -71,7 +72,8 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
       controlInstructions: 'Use the embedded game controls in the iframe to play.',
       color: category === 'Action' ? 'purple' : category === 'Racing' ? 'cyan' : category === 'Adventure' ? 'pink' : category === 'Multiplayer' ? 'orange' : 'emerald',
       xpReward,
-      iframeUrl: iframeUrl.trim(),
+      iframeUrl: iframeUrl.trim() || undefined,
+      externalUrl: externalUrl.trim() || undefined,
     };
 
     onAddGame(newGame);
@@ -80,6 +82,7 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
     setDescription('');
     setImage('');
     setIframeUrl('');
+    setExternalUrl('');
     setCategory('Action');
     setXpReward(150);
     setFormError('');
@@ -146,7 +149,7 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
                 />
               </label>
               <label className="flex flex-col gap-2 text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">
-                iframe Game Link
+                Internal Game URL (embedded)
                 <input
                   value={iframeUrl}
                   onChange={(e) => setIframeUrl(e.target.value)}
@@ -155,6 +158,17 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
                 />
               </label>
             </div>
+
+            <label className="flex flex-col gap-2 text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">
+              External Redirect Link
+              <input
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-[#a855f7] focus:outline-none"
+                placeholder="https://external-site.com/play"
+              />
+              <span className="text-[10px] text-gray-500">Provide either an internal embedded game URL or an external redirect URL.</span>
+            </label>
 
             <label className="flex flex-col gap-2 text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">
               App Logo from File Manager

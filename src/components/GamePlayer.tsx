@@ -25,6 +25,8 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
   const [dimensions, setDimensions] = useState({ width: 700, height: 450 });
   const [commentText, setCommentText] = useState('');
 
+  const isExternalGame = Boolean(game.externalUrl && !game.iframeUrl);
+
   const gameComments = comments
     .filter((comment) => comment.gameId === game.id)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -94,6 +96,12 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
 
   const handleStartGame = () => {
     audioSystem.playPowerUp();
+    if (isExternalGame) {
+      if (game.externalUrl) {
+        window.open(game.externalUrl, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     setIsPlaying(true);
     setGameOver(false);
     setScore(0);
@@ -1338,27 +1346,46 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
               style={{ width: Math.min(dimensions.width, window.innerWidth - 32), height: dimensions.height * 0.6 }}
               className="bg-[#07060e] border border-white/5 rounded-xl sm:rounded-2xl flex flex-col justify-center items-center p-4 sm:p-6 text-center group relative overflow-hidden"
             >
-              {/* Dynamic decorative visual glowing neon grids */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.12)_0%,transparent_70%)] pointer-events-none" />
               <div className="absolute inset-0 bg-grid-[#ffffff]/[0.02] pointer-events-none" />
 
-              <div className="relative z-10 animate-bounce duration-1000 mb-3 sm:mb-4 bg-purple-500/10 p-3 sm:p-5 rounded-full border border-purple-500/20 text-purple-400">
-                <Gamepad2 size={32} />
-              </div>
-
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1 sm:mb-1.5 z-10">
-                Ready to Initiate Sim?
-              </h3>
-              <p className="text-gray-400 text-[11px] sm:text-xs max-w-sm mb-4 sm:mb-6 z-10 line-clamp-2">
-                Level up and build badge credibility.
-              </p>
-
-              <button 
-                onClick={handleStartGame}
-                className="relative group/btn overflow-hidden cursor-pointer bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono uppercase tracking-widest text-[10px] sm:text-xs px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl font-bold transition-transform hover:scale-105 duration-200 flex items-center gap-2 shadow-[0_0_30px_rgba(168,85,247,0.4)]"
-              >
-                <Play size={12} fill="currentColor" /> Initialize
-              </button>
+              {isExternalGame ? (
+                <>
+                  <div className="relative z-10 mb-3 sm:mb-4 rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_25px_rgba(255,255,255,0.08)]">
+                    <img src={game.image} alt={game.title} className="w-full h-56 object-cover" />
+                  </div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2 z-10">
+                    Launch external game link
+                  </h3>
+                  <p className="text-gray-400 text-[11px] sm:text-xs max-w-sm mb-4 sm:mb-6 z-10">
+                    This title opens a website link instead of an embedded canvas game.
+                  </p>
+                  <button 
+                    onClick={handleStartGame}
+                    className="relative group/btn overflow-hidden cursor-pointer bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono uppercase tracking-widest text-[10px] sm:text-xs px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl font-bold transition-transform hover:scale-105 duration-200 flex items-center gap-2 shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+                  >
+                    <Play size={12} fill="currentColor" /> Open Link
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="relative z-10 animate-bounce duration-1000 mb-3 sm:mb-4 bg-purple-500/10 p-3 sm:p-5 rounded-full border border-purple-500/20 text-purple-400">
+                    <Gamepad2 size={32} />
+                  </div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-white mb-1 sm:mb-1.5 z-10">
+                    Ready to Initiate Sim?
+                  </h3>
+                  <p className="text-gray-400 text-[11px] sm:text-xs max-w-sm mb-4 sm:mb-6 z-10 line-clamp-2">
+                    Level up and build badge credibility.
+                  </p>
+                  <button 
+                    onClick={handleStartGame}
+                    className="relative group/btn overflow-hidden cursor-pointer bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-mono uppercase tracking-widest text-[10px] sm:text-xs px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl font-bold transition-transform hover:scale-105 duration-200 flex items-center gap-2 shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+                  >
+                    <Play size={12} fill="currentColor" /> Initialize
+                  </button>
+                </>
+              )}
             </div>
           )}
 
