@@ -1460,7 +1460,7 @@ export default function GamePlayer({ game, onClose, userProfile, updateProfile, 
                     className={`bg-[#05040a] rounded-lg sm:rounded-2xl block shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-white/5 ${isFullscreen ? 'w-full h-full' : ''}`}
                     frameBorder="0"
                     allowFullScreen
-                    sandbox="allow-scripts allow-same-origin"
+                    sandbox="allow-scripts allow-same-origin allow-popups"
                   />
                 ) : (
                   <canvas
