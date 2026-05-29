@@ -22,6 +22,42 @@ const LOCAL_STORAGE_KEY_BRAND_LOGO = 'nexus_brand_logo_2026';
 
 const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || '';
 
+const requestNotificationPermission = () => {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => undefined);
+  }
+};
+
+const sendBrowserNotification = (title: string, body: string) => {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+    });
+  } catch (e) {
+    // Browser may reject if notifications are blocked
+  }
+};
+
+const speakNotification = (message: string) => {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  const utterance = new SpeechSynthesisUtterance(message);
+  utterance.rate = 1.05;
+  utterance.pitch = 1.2;
+  utterance.volume = 0.9;
+  utterance.lang = 'en-US';
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+};
+
+const notifyActivity = (title: string, body: string) => {
+  sendBrowserNotification(title, body);
+  speakNotification(body);
+};
+
 const loadRegisteredAccounts = (): StoredAccount[] => {
   if (typeof window === 'undefined') return [];
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY_ACCOUNTS);
@@ -156,6 +192,8 @@ export default function App() {
 
   // Handle high quality local persistence on load
   useEffect(() => {
+    requestNotificationPermission();
+
     const savedAccounts = loadRegisteredAccounts();
     setAccounts(savedAccounts);
 
@@ -301,6 +339,7 @@ export default function App() {
             setUserProfile(profile);
             localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
             persistRemoteAuthAccount(profile);
+            notifyActivity('Sign in success', `${profile.username} is now connected.`);
             setAuthError('');
             setActiveTab('home');
             return;
@@ -358,6 +397,7 @@ export default function App() {
     setAccounts(nextAccounts);
     setUserProfile(account.profile);
     localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(account.profile));
+    notifyActivity('Sign in success', `${account.profile.username} is now connected.`);
     setAuthError('');
     setActiveTab('home');
   };
@@ -372,6 +412,7 @@ export default function App() {
       );
       saveRegisteredAccounts(nextAccounts);
       setAccounts(nextAccounts);
+      notifyActivity('Logout notice', `${userProfile.username} has signed out.`);
     }
     setUserProfile(null);
     localStorage.removeItem(LOCAL_STORAGE_KEY_PROFILE);
@@ -408,6 +449,7 @@ export default function App() {
     const nextGames = [game, ...games];
     setGames(nextGames);
     saveGames(nextGames);
+    notifyActivity('New game added', `${game.title} is now live on the portal.`);
   };
 
   const handleAddComment = (gameId: string, text: string) => {
@@ -426,6 +468,7 @@ export default function App() {
 
   const handlePlayGame = (game: Game) => {
     audioSystem.playPowerUp();
+    notifyActivity('Play launched', `Starting ${game.title} now.`);
     setActiveGame(game);
   };
 
