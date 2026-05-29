@@ -12,11 +12,14 @@ interface AdminPanelProps {
   currentBrandLogo: string;
   accounts: StoredAccount[];
   comments: GameComment[];
+  activeUsersCount: number;
+  activeGamePlayersCount: number;
+  activeGameTitle: string;
 }
 
 const categoryOptions: Game['category'][] = ['Action', 'Racing', 'Adventure', 'Multiplayer', 'Puzzle'];
 
-export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandLogo, onResetBrandLogo, currentBrandLogo, accounts, comments }: AdminPanelProps) {
+export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandLogo, onResetBrandLogo, currentBrandLogo, accounts, comments, activeUsersCount, activeGamePlayersCount, activeGameTitle }: AdminPanelProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
@@ -237,8 +240,25 @@ export default function AdminPanel({ games, onAddGame, onDeleteGame, onSetBrandL
               <Users size={20} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">Current Users</p>
-              <h2 className="text-xl font-bold">Sessions Monitor</h2>
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-400 font-mono">Current sessions</p>
+              <h2 className="text-xl font-bold">Live visitor status</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-mono">Active website sessions</p>
+                <p className="text-3xl font-bold text-white">{activeUsersCount}</p>
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-cyan-300 font-bold">Live</div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-mono">Users playing now</p>
+                <p className="text-3xl font-bold text-white">{activeGamePlayersCount}</p>
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.3em] text-emerald-300 font-bold">{activeGameTitle || 'Idle'}</div>
             </div>
           </div>
 

@@ -151,6 +151,9 @@ export default function App() {
   const [muteSound, setMuteSound] = useState(audioSystem.isMuted());
   const [authError, setAuthError] = useState('');
 
+  const activeUsersCount = accounts.filter((account) => account.isLoggedIn).length;
+  const activeGamePlayersCount = activeGame && userProfile ? 1 : 0;
+
   // Handle high quality local persistence on load
   useEffect(() => {
     const savedAccounts = loadRegisteredAccounts();
@@ -240,6 +243,30 @@ export default function App() {
     }
   };
 
+  const persistRemoteAuthAccount = (profile: UserProfile) => {
+    const now = new Date().toISOString();
+    const accountList = loadRegisteredAccounts();
+    const accountIndex = accountList.findIndex(
+      (account) => account.username.toLowerCase() === profile.username.toLowerCase()
+    );
+
+    const nextAccount: StoredAccount = {
+      username: profile.username,
+      password: '',
+      profile,
+      isLoggedIn: true,
+      registeredAt: accountIndex !== -1 ? accountList[accountIndex].registeredAt : now,
+      lastSeenAt: now,
+    };
+
+    const nextAccounts = accountIndex !== -1
+      ? accountList.map((account, idx) => idx === accountIndex ? nextAccount : account)
+      : [...accountList, nextAccount];
+
+    saveRegisteredAccounts(nextAccounts);
+    setAccounts(nextAccounts);
+  };
+
   const handleSignIn = (username: string, password: string, isSignUp: boolean) => {
     const trimmedUsername = username.trim();
     const accountList = loadRegisteredAccounts();
@@ -273,6 +300,7 @@ export default function App() {
             if (data.token) localStorage.setItem('nexus_token', data.token);
             setUserProfile(profile);
             localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
+            persistRemoteAuthAccount(profile);
             setAuthError('');
             setActiveTab('home');
             return;
@@ -298,6 +326,7 @@ export default function App() {
           };
           setUserProfile(profile);
           localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(profile));
+          persistRemoteAuthAccount(profile);
           setAuthError('');
           setActiveTab('home');
           return;
@@ -536,7 +565,10 @@ export default function App() {
             onSetBrandLogo={handleBrandLogoUpload}
             onResetBrandLogo={handleResetBrandLogo}
             accounts={accounts} 
-            comments={comments} 
+            comments={comments}
+            activeUsersCount={activeUsersCount}
+            activeGamePlayersCount={activeGamePlayersCount}
+            activeGameTitle={activeGame?.title || ''}
           />
         )}
 
